@@ -1,0 +1,147 @@
+#!/bin/bash
+
+get_script_dir() {
+    SOURCE="${BASH_SOURCE[0]}"
+    # While $SOURCE is a symlink, resolve it
+    while [ -h "$SOURCE" ]; do
+        DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+        SOURCE="$(readlink "$SOURCE")"
+        # If $SOURCE was a relative symlink (so no "/" as prefix, need to resolve it relative to the symlink base directory
+        [[ $SOURCE != /* ]] && SOURCE="$DIR/$SOURCE"
+    done
+    DIR="$(cd -P "$(dirname "$SOURCE")" && pwd)"
+    echo "$DIR"
+}
+
+info() {
+    printf "\n%s %s\n\n" "$(date)" "$*"
+}
+
+RUN_ROOT="$(dirname "$(get_script_dir)")"
+
+source "$RUN_ROOT/etc/backup.conf"
+
+if [ -d "${BORG_MOUNTPOINT}" ]; then
+    if [ -n "$(ls -A "${BORG_MOUNTPOINT}")" ]; then
+        echo "Error: Directory ${BORG_MOUNTPOINT} already exists and is not empty."
+        exit 1
+    fi
+    info "Directory ${BORG_MOUNTPOINT} exists."
+else
+    mkdir -p "${BORG_MOUNTPOINT}"
+fi
+
+borg mount "${BORG_REPO}" "${BORG_MOUNTPOINT}"
+
+info "Backup mounted successfully on ${BORG_MOUNTPOINT}"
+
+# some helpers and error handling:
+# trap 'echo $( date ) Backup interrupted >&2; exit 2' INT TERM
+
+# Backup the most important directories into an archive named after
+# the machine this script is currently running on:
+
+# $BORG_PATH create \
+#     --stats \
+#     --verbose \
+#     --filter AME \
+#     --list \
+#     --show-rc \
+#     --compression lz4 \
+#     --exclude-caches \
+#     --patterns-from "$RUN_ROOT/etc/patterns.lst" \
+#     \
+#     ::'{hostname}-{now}'
+
+# backup_exit=$?
+
+# info "Pruning repository"
+
+# # Use the `prune` subcommand to maintain 7 daily, 4 weekly and 6 monthly
+# # archives of THIS machine. The '{hostname}-' prefix is very important to
+# # limit prune's operation to this machine's archives and not apply to
+# # other machines' archives also:
+
+# $BORG_PATH prune \
+#     --list \
+#     --prefix '{hostname}-' \
+#     --show-rc \
+#     --keep-daily 7 \
+#     --keep-weekly 4 \
+#     --keep-monthly 6 \
+#     --keep-yearly 2
+
+# prune_exit=$?
+
+# # use highest exit code as global exit code
+# global_exit=$((backup_exit > prune_exit ? backup_exit : prune_exit))
+
+# if [ ${global_exit} -eq 0 ]; then
+#     info "Backup and Prune finished successfully"
+# elif [ ${global_exit} -eq 1 ]; then
+#     info "Backup and/or Prune finished with warnings"
+# else
+#     info "Backup and/or Prune finished with errors"
+# fi
+
+# exit ${global_exit}
+
+# if [ -d "${MOUNTPOINT}" ]; then
+#     info "Directory ${MOUNTPOINT} exists."
+# else
+#     echo "Error: Directory /mnt/tmp does not exists."
+#     exit 1
+# fi
+
+# borg mount admin@nas:/volumeSATA1/satashare1-1/backup/mother/borg-backup /mnt/tmp
+
+# some helpers and error handling:
+# trap 'echo $( date ) Backup interrupted >&2; exit 2' INT TERM
+
+# Backup the most important directories into an archive named after
+# the machine this script is currently running on:
+
+# $BORG_PATH create \
+#     --stats \
+#     --verbose \
+#     --filter AME \
+#     --list \
+#     --show-rc \
+#     --compression lz4 \
+#     --exclude-caches \
+#     --patterns-from "$RUN_ROOT/etc/patterns.lst" \
+#     \
+#     ::'{hostname}-{now}'
+
+# backup_exit=$?
+
+# info "Pruning repository"
+
+# # Use the `prune` subcommand to maintain 7 daily, 4 weekly and 6 monthly
+# # archives of THIS machine. The '{hostname}-' prefix is very important to
+# # limit prune's operation to this machine's archives and not apply to
+# # other machines' archives also:
+
+# $BORG_PATH prune \
+#     --list \
+#     --prefix '{hostname}-' \
+#     --show-rc \
+#     --keep-daily 7 \
+#     --keep-weekly 4 \
+#     --keep-monthly 6 \
+#     --keep-yearly 2
+
+# prune_exit=$?
+
+# # use highest exit code as global exit code
+# global_exit=$((backup_exit > prune_exit ? backup_exit : prune_exit))
+
+# if [ ${global_exit} -eq 0 ]; then
+#     info "Backup and Prune finished successfully"
+# elif [ ${global_exit} -eq 1 ]; then
+#     info "Backup and/or Prune finished with warnings"
+# else
+#     info "Backup and/or Prune finished with errors"
+# fi
+
+# exit ${global_exit}

@@ -1,0 +1,16 @@
+---
+prefix: /opt/backup
+
+paths:
+  etc: "{{ prefix }}/etc"
+  var: "{{ prefix }}/var"
+  bin: "{{ prefix }}/bin"
+
+repos:
+  vault:
+    repo: "git@github.com:someone/vault.git"
+    dest: "~/git/vault"
+
+  backup-config:
+    repo: "git@github.com:someone/backup-config.git"
+    dest: "~/git/backup-config"

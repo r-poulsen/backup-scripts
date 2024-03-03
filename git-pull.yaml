@@ -1,0 +1,36 @@
+# ---
+# - hosts: localhost
+#   tasks:
+#     - name: Vault
+#       git:
+#         repo: "git@github.com:r-poulsen/vault.git"
+#         dest: "/path/to/destination1"
+#         update: True
+
+#     - name: Backup Configuration
+#       git:
+#         repo: "git@github.com:r-poulsen/backup-config.git"
+#         dest: "/path/to/destination2"
+#         update: True
+
+# ---
+# - hosts: localhost
+#   tasks:
+#     - name: Clone repositories
+#       git:
+#         repo: "{{ item.repo }}"
+#         dest: "{{ item.dest }}"
+#         update: True
+#       loop: "{{ repos }}"
+
+---
+- hosts: localhost
+  # vars_files:
+  #   - all.yaml
+  tasks:
+    - name: Clone repositories
+      git:
+        repo: "{{ item.value.repo }}"
+        dest: "{{ item.value.dest }}"
+        update: True
+      loop: "{{ repos | dict2items }}"

@@ -1,0 +1,15 @@
+# Sample configuration file
+
+R /etc
+
+R /home
+- /home/*/.cache/*
+
+R /root
+
+R /var
++ /var/lib/docker/config
+- /var/cache/*
+- /var/tmp/*
+- /var/lib/docker/*
+- /var/lib/flatpak/*
