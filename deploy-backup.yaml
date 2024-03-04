@@ -1,11 +1,11 @@
 ---
-- hosts: all
-  # vars:
-  #   PREFIX: /opt/backup_new
-  #   ETC_DIR: "{{ PREFIX }}/etc"
-  #   VAR_DIR: "{{ PREFIX }}/var"
-  #   BIN_DIR: "{{ PREFIX }}/bin"
+- hosts: backup_clients
+
   tasks:
+    - name: Set borg_repo fact
+      set_fact:
+        borg_repo: "ssh://{{ repo_server.user }}@{{ repo_server.host | trim('/') }}/{{ repo_server.path | trim('/') }}/{{ inventory_hostname | trim('/') }}/borg-backup"
+
     - name: Create directories
       become: true
       file:
@@ -13,6 +13,7 @@
         state: directory
         mode: "0750"
       loop: "{{ paths | dict2items }}"
+      no_log: true
 
     # Each host has its own patterns.lst file, stored in the backup-config repo.
     - name: Copy files to etc/
@@ -39,15 +40,41 @@
         dest: "{{ paths.var }}/private_key"
         mode: "0600"
 
-    # The public key is only needed on the backup server, but here's how you would copy it.
-    # - name: Copy the public key
-    #   copy:
-    #     content: "{{ hostvars[inventory_hostname].borg_backup[ansible_hostname].public_key }}"
-    #     dest: "{{ VAR_DIR }}/public_key"
-
     - name: Copy config-file
       become: true
       template:
         src: templates/backup.conf.j2
         dest: "{{ paths.etc }}/backup.conf"
         mode: "0660"
+
+    - name: Copy crontab
+      become: true
+      ansible.builtin.template:
+        src: templates/crontab.j2
+        dest: "/etc/cron.d/backup"
+        mode: "0644"
+
+    - name: Copy logrotate
+      become: true
+      ansible.builtin.template:
+        src: templates/logrotate.j2
+        dest: "/etc/logrotate.d/borg_backup"
+        mode: "0644"
+
+- hosts: repo_server
+
+  tasks:
+    - name: Add public key
+      ansible.posix.authorized_key:
+        user: "{{ repo_server.user }}"
+        state: present
+        key: "{{ item.value.public_key }}"
+      loop: "{{ borg_backup | dict2items }}"
+      no_log: true
+
+    - name: Create repository
+      ansible.builtin.command: "BORG_PASSPHRASE={{ item.value.passphrase }} borg init --encryption=repokey /{{ repo_server.path  | trim('/') }}/{{ item.key }}/borg-backup/"
+      args:
+        creates: "/{{ repo_server.path  | trim('/') }}/{{ item.key }}/borg-backup/"
+      loop: "{{ borg_backup | dict2items }}"
+      no_log: true

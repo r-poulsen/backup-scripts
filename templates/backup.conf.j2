@@ -1,4 +1,4 @@
-BORG_REPO="{{ hostvars[inventory_hostname].borg_backup[ansible_hostname].repo }}"
+BORG_REPO="{{ borg_repo }}"
 BORG_PASSPHRASE="{{ hostvars[inventory_hostname].borg_backup[ansible_hostname].passphrase }}"
 BORG_RSH="ssh -i $RUN_ROOT/var/private_key"
 BORG_REMOTE_PATH="/usr/local/bin/borg"
