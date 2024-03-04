@@ -1,0 +1,1 @@
+{{ hostvars[inventory_hostname].crontab[ansible_hostname] }} root /opt/backup/bin/borg-backup >> {{ logfile }} 2>&1
